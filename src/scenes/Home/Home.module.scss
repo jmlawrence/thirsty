@@ -1,0 +1,13 @@
+.pageWrapper {
+  width: 100%;
+  max-width: 500px;
+  padding: 20px;
+
+  @media only screen and (min-width: 650px) {
+    max-width: 1500px;
+  }
+
+  > .resultsWrapper {
+    margin-top: 20px;
+  }
+}
