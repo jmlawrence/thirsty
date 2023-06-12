@@ -1,41 +1,20 @@
 'use client';
 
+import useSearch from '@/hooks/useSearch';
 import { useState } from 'react';
 import s from './Home.module.scss';
+import EmptyState from './components/EmptyState';
 import Input from './components/Input';
-import {
-  QueryFunction,
-  QueryKey,
-  useQuery,
-  useQueryClient,
-} from '@tanstack/react-query';
-import { SEARCH_API } from '@/constants/api';
-import axios from 'axios';
-import { Drink, DrinkResponse } from '@/types/drinks';
 import ListItem from './components/ListItem';
+import Loading from './components/Loading';
 
 const Home = () => {
   // STATE
   const [searchText, setSearchText] = useState('');
 
   // HOOKS
-
-  // QUERIES
-  const { isLoading, error, data, isFetching } = useQuery({
-    queryKey: ['search', searchText],
-    queryFn: (): Promise<DrinkResponse> =>
-      axios
-        .get(`${SEARCH_API}?s=${searchText}`)
-        .then((res) => res.data),
-  });
-
-  if (isFetching) {
-    console.log('FETCHING!');
-  }
-  //   console.log({ isFetching, isLoading, data });
-
-  const results = data?.drinks || [];
-  const noResultsFound = !isLoading && results.length === 0;
+  const { searchResults, isLoading, resultsFound } =
+    useSearch(searchText);
 
   return (
     <div className={s.pageWrapper}>
@@ -44,16 +23,23 @@ const Home = () => {
         setValue={setSearchText}
         placeholder='Find a drink'
       />
-      {isLoading && <div>LOADING!</div>}
-      {noResultsFound && <div>No Results :(</div>}
 
       <div className={s.resultsWrapper}>
-        {!isLoading &&
-          results.map((drink) => {
-            return (
-              <ListItem drink={drink} key={drink.idDrink} />
-            );
-          })}
+        <>
+          {isLoading && <Loading />}
+          {!resultsFound && (
+            <EmptyState searchTerm={searchText} />
+          )}
+          {!isLoading &&
+            searchResults.map((drink) => {
+              return (
+                <ListItem
+                  drink={drink}
+                  key={drink.idDrink}
+                />
+              );
+            })}
+        </>
       </div>
     </div>
   );

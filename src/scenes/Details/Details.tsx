@@ -1,49 +1,39 @@
 'use client';
 
-import { DETAILS_API } from '@/constants/api';
-import { DrinkResponse } from '@/types/drinks';
-import { useQuery } from '@tanstack/react-query';
-import axios from 'axios';
-import s from './Details.module.scss';
-import { extractIngredients } from './utils/ingredients';
-import { useEffect, useRef } from 'react';
+import { LeftChevron } from '@/components/icons/LeftChevron';
+import useDrink from '@/hooks/useDrink';
 import Chart from 'chart.js/auto';
 import Link from 'next/link';
-import { LeftChevron } from '@/components/icons/LeftChevron';
+import { useEffect, useRef } from 'react';
+import s from './Details.module.scss';
 
 const Details = ({ drinkId }: { drinkId: string }) => {
-  // www.thecocktaildb.com/api/json/v1/1/lookup.php?i=11007
-
   // HOOKS
-  const { isLoading, error, data, isFetching } = useQuery({
-    queryKey: ['details', drinkId],
-    queryFn: (): Promise<DrinkResponse> =>
-      axios
-        .get(`${DETAILS_API}?i=${drinkId}`)
-        .then((res) => res.data),
-  });
+  const { drink, isLoading, ingredients } =
+    useDrink(drinkId);
+
+  // REFS
   const canvas = useRef<HTMLCanvasElement>(null);
+  const chartRendered = useRef(false);
 
-  const drink = data?.drinks[0];
-  const ingredients = extractIngredients(drink);
-
+  // EFFECTS
   useEffect(() => {
     const ctx = canvas.current;
 
-    console.log({ ctx, canvas });
-
-    // let chartStatus = Chart.getChart('myChart');
-    // if (chartStatus != undefined) {
-    //   chartStatus.destroy();
-    // }
-
-    if (ctx && drink) {
-      const chart = new Chart(ctx, {
+    if (
+      !isLoading &&
+      ctx &&
+      drink &&
+      !chartRendered.current
+    ) {
+      new Chart(ctx, {
         type: 'pie',
         data: {
+          labels: ingredients.map(
+            (ingredient) => ingredient.label
+          ),
           datasets: [
             {
-              label: 'Dataset 1',
               data: ingredients.map(
                 (ingredient) => ingredient.size
               ),
@@ -54,17 +44,23 @@ const Details = ({ drinkId }: { drinkId: string }) => {
           ],
         },
         options: {
+          plugins: {
+            legend: {
+              display: false,
+              position: 'bottom',
+            },
+          },
           responsive: true,
         },
       });
+
+      chartRendered.current = true;
     }
-  }, [data, drink]);
+  }, [drink, ingredients, isLoading]);
 
   if (!drink) {
     return null;
   }
-
-  console.log({ data, ingredients });
 
   return (
     <div className={s.pageWrapper}>
@@ -81,6 +77,7 @@ const Details = ({ drinkId }: { drinkId: string }) => {
         <img
           src={drink.strDrinkThumb}
           className={s.detailImage}
+          alt={`Image of ${drink.strDrink}`}
         />
       </div>
       <div className={s.name}>{drink.strDrink}</div>

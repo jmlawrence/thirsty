@@ -1,8 +1,8 @@
 import Application from '@/scenes/Application';
-import './globals.css';
+import './globals.scss';
 
 export const metadata = {
-  title: 'Thirty',
+  title: 'Thirtsy',
   description: 'A Drink Composition Experiment',
 };
 
@@ -20,7 +20,6 @@ export default function RootLayout({
           sizes='any'
         />
       </head>
-      ;
       <body>
         <Application>{children}</Application>
       </body>
